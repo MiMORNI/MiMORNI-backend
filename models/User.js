@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     smallGoals: {},
     bigGoals: {},
   },
+  images: { type: [String] },
 });
 
 userSchema.set("toJSON", {

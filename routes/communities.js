@@ -36,18 +36,9 @@ router.get("/getCommunity/:username/percentComplete", (req, res) => {
   const username = req.params.username;
   User.find({ username: username }).then((user) => {
     const goals = user[0].goals;
-    const numGoals =
-      Object.keys(goals.smallGoals).length + Object.keys(goals.bigGoals).length;
-    let numCompletedSmallGoals = 0;
-    for (let goal in goals.smallGoals) {
-      if (goals.smallGoals[goal]) numCompletedSmallGoals += 1;
-    }
-    let numCompletedBigGoals = 0;
-    for (let goal in goals.bigGoals) {
-      if (goals.bigGoals[goal]) numCompletedBigGoals += 1;
-    }
-    const numCompletedGoals = numCompletedSmallGoals + numCompletedBigGoals;
-    if (numCompletedGoals == 0) return res.json({ percentComplete: 0 });
+    let numGoals, numCompletedGoals;
+    ({ numGoals, numCompletedGoals } = getCompletionStats(goals));
+    if (numGoals == 0) return res.json({ percentComplete: 0 });
     return res.json({ percentComplete: (numCompletedGoals / numGoals) * 100 });
   });
 });
@@ -57,6 +48,37 @@ router.get("/getCommunity/:username/percentComplete", (req, res) => {
  * @param {Array} req.params.users - Users to get aggregate stats on
  * @return  {Number} - return group's aggregate % of completion
  */
-router.get("/getCommunity/percentComplete", (req, res) => {});
+router.get("/getCommunity/percentComplete", (req, res) => {
+  User.find({}).then((users) => {
+    let totalNumGoals = 0;
+    let totalCompletedGoals = 0;
+    users.forEach((user) => {
+      let numGoals, numCompletedGoals;
+      ({ numGoals, numCompletedGoals } = getCompletionStats(user.goals));
+      totalNumGoals += numGoals;
+      totalCompletedGoals += numCompletedGoals;
+    });
+    if (totalNumGoals == 0) return res.json({ percentComplete: 0 });
+    return res.json({
+      percentComplete: (totalCompletedGoals / totalNumGoals) * 100,
+    });
+  });
+});
+
+function getCompletionStats(goals) {
+  const numGoals =
+    Object.keys(goals.smallGoals).length + Object.keys(goals.bigGoals).length;
+  let numCompletedSmallGoals = 0;
+  let numCompletedBigGoals = 0;
+  for (let goal in goals.smallGoals) {
+    if (goals.smallGoals[goal]) numCompletedSmallGoals += 1;
+  }
+  for (let goal in goals.bigGoals) {
+    if (goals.bigGoals[goal]) numCompletedBigGoals += 1;
+  }
+  const numCompletedGoals = numCompletedSmallGoals + numCompletedBigGoals;
+
+  return { numGoals: numGoals, numCompletedGoals: numCompletedGoals };
+}
 
 module.exports = router;

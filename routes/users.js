@@ -43,30 +43,28 @@ router.get("/getUser/:username", (req, res) => {
 });
 
 /**
- * Update a user's goal
+ * Update a user's goals
  * @param {string} req.params.username - Requested user's username
  * @return  {JSON} - return user's attributes
  */
-router.put("/updateUserGoal/:username", (req, res) => {
+router.put("/updateUserGoals/:username", (req, res) => {
   const username = req.params.username;
-  const goal = req.body.goal;
-  const goalIsComplete = req.body.goalIsComplete;
+  const newGoals = req.body.goals;
+
   User.findOne({ username: username }).then((user) => {
-    let smallGoals = user.goals.smallGoals;
-    let bigGoals = user.goals.bigGoals;
-    let attributeName;
-    if (smallGoals.hasOwnProperty(goal)) {
-      attributeName = `goals.smallGoals.${goal}`;
-    } else if (bigGoals.hasOwnProperty(goal)) {
-      attributeName = `goals.bigGoals.${goal}`;
+    let goals = user.goals;
+    let smallGoals = Object.keys(goals.smallGoals);
+    let bigGoals = Object.keys(goals.bigGoals);
+    for (let goal in newGoals) {
+      if (smallGoals.includes(goal)) {
+        goals.smallGoals[goal] = newGoals[goal];
+      } else if (bigGoals.includes(goal)) {
+        goals.bigGoals[goal] = newGoals[goal];
+      }
     }
-    console.log(`attributeName: ${attributeName}`);
-    User.updateOne(
-      { username: username },
-      { attributeName: goalIsComplete }
-    ).then(() => {
-      return res.json({ message: "Successfully updated user's goal" });
-    });
+    user.goals = goals;
+    user.save();
+    res.send({ success: true });
   });
 });
 

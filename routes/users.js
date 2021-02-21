@@ -31,7 +31,7 @@ router.post("/createUser", (req, res) => {
 
 /**
  * Get a user by username
- * @param {string} req.body.username - Requested user's username
+ * @param {string} req.params.username - Requested user's username
  * @return  {JSON} - return user's attributes
  */
 router.get("/getUser/:username", (req, res) => {

@@ -18,13 +18,13 @@ router.get("/", (req, res) => {
 router.post("/createUser", (req, res) => {
   const user = new User({
     username: req.body.username,
+    durationInMonths: req.body.durationInMonths,
     goals: req.body.goals,
     wakeTime: req.body.wakeTime,
     sleepTime: req.body.sleepTime,
   });
 
   user.save().then((result) => {
-    console.log(`User saved!`);
     return res.json({ created: true });
   });
 });

@@ -23,6 +23,10 @@ const multer = Multer({
 const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET);
 const bucketName = process.env.GCLOUD_STORAGE_BUCKET;
 
+/**
+ * Upload an image for a user
+ * @return  {JSON} - return URL of image location
+ */
 router.post("/uploadImage", multer.single("image"), (req, res, next) => {
   if (!req.file) {
     res.status(400).send("No file uploaded.");
@@ -50,6 +54,11 @@ router.post("/uploadImage", multer.single("image"), (req, res, next) => {
   blobStream.end(req.file.buffer);
 });
 
+/**
+ * Get a user's images
+ * @param {string} req.params.username - Requested user's username
+ * @return  {JSON} - return user's image URLs
+ */
 router.get("/getUserImages/:username", (req, res) => {
   const username = req.params.username;
   User.findOne({ username: username }).then((user) => {
@@ -57,19 +66,19 @@ router.get("/getUserImages/:username", (req, res) => {
   });
 });
 
-async function uploadFile(filepath, destination) {
-  await storage.bucket(bucketName).upload(filepath, {
-    destination: destination,
-    metadata: {
-      cacheControl: "public, max-age=31536000",
-    },
+/**
+ * Get all images in a give community
+ * @return  {JSON} - return all image URLs in a community
+ */
+router.get("/getCommunityImages", (req, res) => {
+  let urls = [];
+  User.find({}).then((users) => {
+    for (let user in users) {
+      const images = users[user].images;
+      urls.push(...images);
+    }
+    res.json({ urls: urls });
   });
-}
-
-async function makePublic(filename) {
-  // Makes the file public
-  await storage.bucket(bucketName).file(filename).makePublic();
-  console.log(`gs://${bucketName}/${filename} is now public`);
-}
+});
 
 module.exports = router;

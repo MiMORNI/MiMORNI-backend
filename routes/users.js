@@ -1,5 +1,4 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 
 const router = express.Router();
@@ -8,38 +7,41 @@ router.get("/", (req, res) => {
   res.send("hello");
 });
 
+/**
+ * Create a user
+ * @param {string} req.body.username - New user's username
+ * @param {string} req.body.goals - New user's goals
+ * @param {string} req.body.wakeTime - New user's wakeTime
+ * @param {string} req.body.sleepTime - New user's sleepTime
+ * @return  {JSON} - return whether user was successfully created
+ */
 router.post("/createUser", (req, res) => {
   const user = new User({
     username: req.body.username,
-    goals: {
-      smallGoals: {
-        makeBed: req.body.goals.smallGoals.makeBed,
-        drink1LWater: req.body.goals.smallGoals.drink1LWater,
-        writeBlog: req.body.goals.smallGoals.writeBlog,
-        readNewspaper: req.body.goals.smallGoals.readNewspaper,
-        meditation: req.body.goals.smallGoals.meditation,
-        journaling: req.body.goals.smallGoals.journaling,
-      },
-      bigGoals: {
-        exercise: req.body.goals.bigGoals.exercise,
-        readBook: req.body.goals.bigGoals.readBook,
-        study: req.body.goals.bigGoals.study,
-      },
-    },
+    goals: req.body.goals,
+    wakeTime: req.body.wakeTime,
+    sleepTime: req.body.sleepTime,
   });
 
   user.save().then((result) => {
     console.log(`User saved!`);
-    return res.json({ id: user.id });
+    return res.json({ created: true });
   });
 });
 
-router.get("/getUser", (req, res) => {
+/**
+ * Get a user by username
+ * @param {string} req.body.username - Requested user's username
+ * @return  {JSON} - return user's attributes
+ */
+router.get("/getUser/:username", (req, res) => {
   const username = req.params.username;
   User.findOne({ username: username }).then((user) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     return res.json({
       goals: user.goals,
+      wakeTime: user.wakeTime,
+      sleepTime: user.sleepTime,
     });
   });
 });

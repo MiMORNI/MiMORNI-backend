@@ -53,8 +53,14 @@ router.put("/updateUserGoals/:username", (req, res) => {
 
   User.findOne({ username: username }).then((user) => {
     let goals = user.goals;
-    let smallGoals = Object.keys(goals.smallGoals);
-    let bigGoals = Object.keys(goals.bigGoals);
+    let smallGoals = [];
+    if ("smallGoals" in Object.keys(goals)) {
+      smallGoals = Object.keys(goals.smallGoals);
+    }
+    let bigGoals = [];
+    if ("bigGoals" in Object.keys(goals)) {
+      bigGoals = Object.keys(goals.bigGoals);
+    }
     for (let goal in newGoals) {
       if (smallGoals.includes(goal)) {
         goals.smallGoals[goal] = newGoals[goal];

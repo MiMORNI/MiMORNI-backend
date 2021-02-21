@@ -50,6 +50,7 @@ router.get("/getCommunity/:username/percentComplete", (req, res) => {
  */
 router.get("/getCommunity/percentComplete", (req, res) => {
   User.find({}).then((users) => {
+    let foundUsers = users;
     let totalNumGoals = 0;
     let totalCompletedGoals = 0;
     users.forEach((user) => {
@@ -59,15 +60,25 @@ router.get("/getCommunity/percentComplete", (req, res) => {
       totalCompletedGoals += numCompletedGoals;
     });
     if (totalNumGoals == 0) return res.json({ percentComplete: 0 });
+    const percentCompleteCommunity =
+      (totalCompletedGoals / totalNumGoals) * 100;
     return res.json({
-      percentComplete: (totalCompletedGoals / totalNumGoals) * 100,
+      percentCompleteCommunity: percentCompleteCommunity,
+      users: foundUsers,
     });
   });
 });
 
 function getCompletionStats(goals) {
-  const numGoals =
-    Object.keys(goals.smallGoals).length + Object.keys(goals.bigGoals).length;
+  let numSmallGoals = 0;
+  let numBigGoals = 0;
+  if (goals.hasOwnProperty("smallGoals")) {
+    numSmallGoals = Object.keys(goals.smallGoals).length;
+  }
+  if ("bigGoals" in Object.keys(goals)) {
+    numBigGoals = Object.keys(goals.bigGoals).length;
+  }
+  const numGoals = numSmallGoals + numBigGoals;
   let numCompletedSmallGoals = 0;
   let numCompletedBigGoals = 0;
   for (let goal in goals.smallGoals) {

@@ -1,15 +1,62 @@
 const express = require("express");
+const User = require("../models/User");
+
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send("Hello from communities route");
+/**
+ * Get users with same wakeTime
+ * @param {string} req.params.wakeTime - requested wakeTime
+ * @return  {JSON} - return usernames with same wakeTime
+ */
+router.get("/getPeopleInGroup/wakeTime/:wakeTime", (req, res) => {
+  const wakeTime = req.params.wakeTime;
+  User.find({ wakeTime: wakeTime }).then((users) => {
+    return res.json({ users: users });
+  });
 });
 
-router.get("/getPeopleInSleepGroup", (req, res) => {
-  const data = ["Suji", "Sohyun", "Justin"];
-  res.send(data);
+/**
+ * Get users with same sleepTime
+ * @param {string} req.params.sleepTime - requested sleepTime
+ * @return  {JSON} - return usernames with same sleepTime
+ */
+router.get("/getPeopleInGroup/sleepTime/:sleepTime", (req, res) => {
+  const sleepTime = req.params.sleepTime;
+  User.find({ sleepTime: sleepTime }).then((users) => {
+    return res.json({ users: users });
+  });
 });
 
-router.post("/addPerson", (req, res) => {});
+/**
+ * Calculate a user's achievement in a %
+ * @param {string} req.params.username - username to get stats on
+ * @return  {Number} - return user's % completion
+ */
+router.get("/getCommunity/:username/percentComplete", (req, res) => {
+  const username = req.params.username;
+  User.find({ username: username }).then((user) => {
+    const goals = user[0].goals;
+    const numGoals =
+      Object.keys(goals.smallGoals).length + Object.keys(goals.bigGoals).length;
+    let numCompletedSmallGoals = 0;
+    for (let goal in goals.smallGoals) {
+      if (goals.smallGoals[goal]) numCompletedSmallGoals += 1;
+    }
+    let numCompletedBigGoals = 0;
+    for (let goal in goals.bigGoals) {
+      if (goals.bigGoals[goal]) numCompletedBigGoals += 1;
+    }
+    const numCompletedGoals = numCompletedSmallGoals + numCompletedBigGoals;
+    if (numCompletedGoals == 0) return res.json({ percentComplete: 0 });
+    return res.json({ percentComplete: (numCompletedGoals / numGoals) * 100 });
+  });
+});
+
+/**
+ * Calculate group's achievement in a %
+ * @param {Array} req.params.users - Users to get aggregate stats on
+ * @return  {Number} - return group's aggregate % of completion
+ */
+router.get("/getCommunity/percentComplete", (req, res) => {});
 
 module.exports = router;
